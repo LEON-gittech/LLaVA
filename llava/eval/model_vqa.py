@@ -33,6 +33,24 @@ def eval_model(args):
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, args.model_base, model_name)
 
+    # # Process the fixed example images once
+    fixed_images = []
+    fixed_image_sizes = []
+    fixed_examples = [
+        {"image": "862902619928506372.jpg"},
+        {"image": "827619548610310148.jpg"}
+    ]
+    
+    for example in fixed_examples:
+        image_path = os.path.join(args.image_folder, example["image"])
+        image = Image.open(image_path).convert('RGB')
+        # 保存图像尺寸
+        fixed_image_sizes.append(image.size)  # image.size 返回一个元组 (width, height)
+
+        image_tensor = process_images([image], image_processor, model.config)[0]
+        
+        fixed_images.append(image_tensor)
+        
     questions = [json.loads(q) for q in open(os.path.expanduser(args.question_file), "r")]
     questions = get_chunk(questions, args.num_chunks, args.chunk_idx)
     answers_file = os.path.expanduser(args.answers_file)
